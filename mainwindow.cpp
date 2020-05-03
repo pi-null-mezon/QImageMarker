@@ -152,7 +152,7 @@ void MainWindow::openDirectory(const QString &name)
             if(!pointsmap.contains(listofimages.at(position)))
                 break;
         }
-
+        position = position % listofimages.size();
         open_image_with_index(position);
     }
 }
