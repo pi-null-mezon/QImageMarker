@@ -163,7 +163,7 @@ void MainWindow::open_image_with_index(int pos)
         const QString filename = dir.absoluteFilePath(listofimages.at(pos));
 
         cv::Mat bgrmat = cv::imread(filename.toStdString(),cv::IMREAD_COLOR);
-        if(ui->actionEqualizeImage->isChecked()) {
+        if(!bgrmat.empty() && ui->actionEqualizeImage->isChecked()) {
             std::vector<cv::Mat> channels;
             cv::split(bgrmat,channels);
             for(auto channel: channels)
