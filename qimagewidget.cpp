@@ -4,12 +4,13 @@
 #include <QMouseEvent>
 #include <QMimeData>
 #include <QFileInfo>
+#include <QJsonObject>
 
 #include <cmath>
 
 bool isNear(const QPointF &_lp, const QPointF &_rp)
 {
-    return std::sqrt((_lp.x()-_rp.x())*(_lp.x()-_rp.x()) + (_lp.y()-_rp.y())*(_lp.y()-_rp.y())) < 0.01;
+    return std::sqrt((_lp.x()-_rp.x())*(_lp.x()-_rp.x()) + (_lp.y()-_rp.y())*(_lp.y()-_rp.y())) < 0.05;
 }
 
 QImageWidget::QImageWidget(QWidget *parent) : QWidget(parent), allowpointmove(false), scale(1), allowtranslation(false)
@@ -25,13 +26,15 @@ void QImageWidget::paintEvent(QPaintEvent *_event)
     painter.translate(translation);
     painter.scale(scale,scale);
 
-    painter.fillRect(rect(),Qt::gray);
+    //painter.fillRect(rect(),Qt::gray);
+    //painter.fillRect(rect(),Qt::BDiagPattern);
     if(!image.isNull()) {
         painter.drawImage(inscribedrect,image);
 
         QPen _pen = painter.pen();
-        _pen.setColor(QColor(55,255,55,150));
-        painter.setBrush(QColor(255,255,255,50));
+        _pen.setColor(QColor(55,255,55,255));
+
+        painter.setBrush(QColor(255,255,255,100));
         painter.setPen(_pen);
 
 
@@ -42,13 +45,23 @@ void QImageWidget::paintEvent(QPaintEvent *_event)
                                         points[i].y()*inscribedrect.height() + inscribedrect.y()));
         painter.drawPolygon(abspoints);
         for(int i = 0; i < points.size(); ++i) {
-            painter.drawEllipse(abspoints[i],3,3);
+            painter.drawEllipse(abspoints[i],5,5);
+            switch(i) {
+                case 0:
+                    painter.drawText(abspoints[i] - QPointF(-5,-15),QString("TL"));
+                    break;
+                case 1:
+                    painter.drawText(abspoints[i] - QPointF(-5,-15),QString("TR"));
+                    break;
+                case 2:
+                    painter.drawText(abspoints[i] - QPointF(-5,-15),QString("BR"));
+                    break;
+                case 3:
+                    painter.drawText(abspoints[i] - QPointF(-5,-15),QString("BL"));
+                    break;
+            }
             painter.drawText(abspoints[i] - QPointF(-5,5),QString("%1;%2").arg(QString::number(points[i].x(),'f',2),
                                                                                QString::number(points[i].y(),'f',2)));
-        }
-
-        if(points.size() == 2) {
-            painter.drawEllipse(QRectF(abspoints[0],abspoints[1]));
         }
     } else {
         QFont _font = painter.font();
@@ -73,7 +86,7 @@ void QImageWidget::mousePressEvent(QMouseEvent *event)
     if(inscribedrect.isValid() && (event->button() == Qt::LeftButton)) {
         QPointF _point((event->x()/scale - inscribedrect.x() - translation.x()/scale)/(inscribedrect.width()),
                        (event->y()/scale - inscribedrect.y() - translation.y()/scale)/(inscribedrect.height()));
-        qDebug("Absolute (%d; %d) >> relative to image's rect (%.3f; %.3f)",event->x(),event->y(),_point.x(),_point.y());
+        //qDebug("Absolute (%d; %d) >> relative to image's rect (%.3f; %.3f)",event->x(),event->y(),_point.x(),_point.y());
         for(int i = 0; i < points.size(); ++i) {
             if(isNear(points[i],_point)) {
                 pointindex = i;
@@ -155,7 +168,13 @@ void QImageWidget::dragEnterEvent(QDragEnterEvent *_event)
 void QImageWidget::setImage(const QImage &value)
 {
     points.clear();
-    points.reserve(1024);
+    points.reserve(32);
+    translation.setX(0);
+    translation.setY(0);
+    translationstart.setX(0);
+    translationend.setY(0);
+    translationend.setX(0);
+    translationend.setY(0);
     image = value;
     if(!image.isNull())
         inscribedrect = makeInscribedRect(rect(),image.rect());
@@ -166,15 +185,18 @@ void QImageWidget::setImage(const QImage &value)
 
 QRectF QImageWidget::makeInscribedRect(const QRectF &_bound, const QRectF &_source)
 {
+    static float padding_factor = 1.3f;
     QRectF _output;
     if(_bound.width()/_bound.height() > _source.width()/_source.height()) {
-        _output.setHeight(_bound.height());
-        _output.setWidth(_bound.height() * _source.width()/_source.height());
+        _output.setHeight(_bound.height() / padding_factor);
+        _output.setWidth((_bound.height()/ padding_factor) * _source.width()/_source.height());
         _output.moveLeft((_bound.width() - _output.width())/2.0);
-    } else {
-        _output.setWidth(_bound.width());
-        _output.setHeight(_bound.width() * _source.height()/_source.width());
         _output.moveTop((_bound.height() - _output.height())/2.0);
+    } else {
+        _output.setWidth(_bound.width() / padding_factor);
+        _output.setHeight((_bound.width() / padding_factor) * _source.height()/_source.width());
+        _output.moveTop((_bound.height() - _output.height())/2.0);
+        _output.moveLeft((_bound.width() - _output.width())/2.0);
     }
     return _output;
 }
@@ -188,6 +210,36 @@ void QImageWidget::setPoints(const QVector<QPointF> &_points)
 QVector<QPointF> QImageWidget::getPoints() const
 {
     return points;
+}
+
+QJsonObject QImageWidget::getFourJsonPoints() const
+{
+    QJsonObject json;
+    for(int i = 0; i < 4; ++i) {
+        QJsonObject tmp;
+        if(points.size() >= (i + 1)) {
+            tmp["present"] = true;
+            tmp["x"] = points.at(i).x()*image.width();
+            tmp["y"] = points.at(i).y()*image.height();
+        } else {
+            tmp["present"] = false;
+        }
+        switch(i) {
+            case 0:
+                json["top_left"] = tmp;
+                break;
+            case 1:
+                json["top_right"] = tmp;
+                break;
+            case 2:
+                json["bottom_right"] = tmp;
+                break;
+            case 3:
+                json["bottom_left"] = tmp;
+                break;
+        }
+    }
+    return json;
 }
 
 void QImageWidget::clearPoints()

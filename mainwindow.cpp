@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "qjsonobject.h"
 #include "ui_mainwindow.h"
 
 #include <QClipboard>
@@ -6,12 +7,12 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QLabel>
+#include <QJsonDocument>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "loadpointsdialog.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -39,7 +40,7 @@ MainWindow::~MainWindow()
 void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 {
     QMenu _menu(this);
-    _menu.addAction(ui->actionCopyPointsToClipboard);
+    //_menu.addAction(ui->actionCopyPointsToClipboard);
     _menu.addAction(ui->actionclearPoints);
     _menu.exec(event->globalPos());
 }
@@ -101,7 +102,7 @@ void MainWindow::on_actionShowAbout_triggered()
     appLabel.setAlignment(Qt::AlignCenter);
     QLabel authorLabel(tr("%1").arg(APP_DESIGNER));
     authorLabel.setAlignment(Qt::AlignCenter);
-    QLabel infoLabel(tr("Is designed to be a handy tool for manual images markup"));
+    QLabel infoLabel(tr("Was designed to be a handy tool for manual images markup"));
     infoLabel.setAlignment(Qt::AlignCenter);
     infoLabel.setWordWrap(true);
     infoLabel.setMargin(pointSize);
@@ -109,7 +110,7 @@ void MainWindow::on_actionShowAbout_triggered()
     layout.addWidget(&appLabel);
     layout.addWidget(&authorLabel);
     layout.addWidget(&infoLabel);
-    aboutDialog.setFixedSize(pointSize * 40, pointSize * 20);
+    aboutDialog.setFixedSize(pointSize * 30, pointSize * 15);
     aboutDialog.exec();
 }
 
@@ -118,16 +119,6 @@ void MainWindow::on_actionExit_triggered()
     close();
 }
 
-void MainWindow::on_actionLoadPoints_triggered()
-{
-    LoadPointsDialog dialog;
-    if(dialog.exec() == QDialog::Accepted) {
-        QVector<QPointF> _points = dialog.points();
-        if(_points.size() > 0) {
-            ui->widget->setPoints(_points);
-        }
-    }
-}
 
 void MainWindow::on_actionactionopenDirectory_triggered()
 {
@@ -182,7 +173,7 @@ void MainWindow::open_image_with_index(int pos)
         } else
             QMessageBox::warning(this,APP_NAME,tr("Can not open '%1'!").arg(filename));
 
-        this->statusBar()->showMessage(tr("Markedup: %1 / %2").arg(QString::number(pointsmap.size()),
+        this->statusBar()->showMessage(tr("Marked up samples in current dir: %1 / %2").arg(QString::number(pointsmap.size()),
                                                                    QString::number(listofimages.size())));
     }
 }
@@ -237,10 +228,30 @@ void MainWindow::commit_points()
 {
     auto points = ui->widget->getPoints();
     if(listofimages.size() > 0) {
-        if(points.size() > 0)
+        const QString json_filename = dir.absoluteFilePath(QString("%1.json").arg(listofimages.at(position).section('.',0,0)));
+        if(points.size() > 0) {
             pointsmap.insert(listofimages.at(position),points);
-        else
+            // write JSON markup
+            QJsonObject json;
+            auto points_json = ui->widget->getFourJsonPoints();
+            if(QFile::exists(json_filename)) {
+                QFile file(json_filename);
+                file.open(QIODevice::ReadOnly);
+                json = QJsonDocument::fromJson(file.readAll()).object();
+                file.close();
+            }
+            QFile file(json_filename);
+            file.open(QIODevice::WriteOnly);
+            const auto & keys = points_json.keys();
+            for(const auto & key : keys)
+                json[key] = points_json[key];
+            file.write(QJsonDocument(json).toJson(QJsonDocument::Indented));
+            file.close();
+        } else {
             pointsmap.remove(listofimages.at(position));
+            if(QFile::exists(json_filename))
+                QFile::remove(json_filename);
+        }
     }
 }
 
@@ -248,4 +259,5 @@ void MainWindow::commit_points()
 void MainWindow::on_actionEqualizeImage_triggered(bool checked)
 {
     settings->setValue("EqualizeImage",checked);
+    open_image_with_index(position);
 }

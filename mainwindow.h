@@ -32,7 +32,6 @@ private slots:
     void on_actionclearPoints_triggered();
     void on_actionShowAbout_triggered();
     void on_actionExit_triggered();
-    void on_actionLoadPoints_triggered();
     void on_actionactionopenDirectory_triggered();
 
     void openDirectory(const QString &filename);

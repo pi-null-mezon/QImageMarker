@@ -22,6 +22,7 @@ public:
     static QRectF makeInscribedRect(const QRectF &_bound,const QRectF &_source);
     void    setPoints(const QVector<QPointF> &_points);
     QVector<QPointF> getPoints() const;
+    QJsonObject getFourJsonPoints() const;
     void    clearPoints();
 
 signals:

@@ -4,7 +4,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
 TARGET = QImageMarker
-VERSION = 0.0.0.0
+VERSION = 0.0.1.0
 
 DEFINES += APP_NAME=\\\"$${TARGET}\\\" \
            APP_VERSION=\\\"$${VERSION}\\\" \
@@ -22,13 +22,11 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    loadpointsdialog.cpp \
     main.cpp \
     mainwindow.cpp \
     qimagewidget.cpp
 
 HEADERS += \
-    loadpointsdialog.h \
     mainwindow.h \
     qimagewidget.h
 
