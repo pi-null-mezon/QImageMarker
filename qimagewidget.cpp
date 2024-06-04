@@ -136,8 +136,8 @@ void QImageWidget::wheelEvent(QWheelEvent *event)
     QPoint numDegrees = event->angleDelta() / 120;
     //qDebug("wheel: %d, %d",numDegrees.x(),numDegrees.y());
     scale += 0.1 * numDegrees.y();
-    if(scale < 1)
-        scale = 1;
+    if(scale < 0.75)
+        scale = 0.75;
     else if(scale > 10.0)
         scale = 10.0;
     if(numDegrees.y() != 0) {
@@ -168,13 +168,16 @@ void QImageWidget::dragEnterEvent(QDragEnterEvent *_event)
 void QImageWidget::setImage(const QImage &value)
 {
     points.clear();
-    points.reserve(32);
+    points.reserve(8);
+    // Drop scale and translation
     translation.setX(0);
     translation.setY(0);
     translationstart.setX(0);
     translationend.setY(0);
     translationend.setX(0);
     translationend.setY(0);
+    scale = 1;
+    // Update image
     image = value;
     if(!image.isNull())
         inscribedrect = makeInscribedRect(rect(),image.rect());
@@ -185,7 +188,7 @@ void QImageWidget::setImage(const QImage &value)
 
 QRectF QImageWidget::makeInscribedRect(const QRectF &_bound, const QRectF &_source)
 {
-    static float padding_factor = 1.3f;
+    static float padding_factor = 1.0f;
     QRectF _output;
     if(_bound.width()/_bound.height() > _source.width()/_source.height()) {
         _output.setHeight(_bound.height() / padding_factor);
