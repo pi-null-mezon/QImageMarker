@@ -228,7 +228,9 @@ void MainWindow::commit_points()
 {
     auto points = ui->widget->getPoints();
     if(listofimages.size() > 0) {
-        const QString json_filename = dir.absoluteFilePath(QString("%1.json").arg(listofimages.at(position).section('.',0,-1)));
+        const QString extension = listofimages.at(position).section('.',-1,-1);
+        const QString json_filename = dir.absoluteFilePath(QString("%1json").arg(listofimages.at(position).section(extension,0,0)));
+        qDebug("%s %s", extension.toUtf8().constData(), json_filename.toUtf8().constData());
         if(points.size() > 0) {
             pointsmap.insert(listofimages.at(position),points);
             // write JSON markup
