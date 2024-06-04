@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "QImageMarker"
-#define MyAppVersion "0.0.1.0"
+#define MyAppVersion "0.0.1.1"
 #define MyAppPublisher "pi-mezon.ru"
 #define MyAppExeName "QImageMarker.exe"
 #define MyAppURL "https://github.com/pi-null-mezon/QImageMarker.git"

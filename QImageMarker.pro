@@ -4,7 +4,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
 TARGET = QImageMarker
-VERSION = 0.0.1.0
+VERSION = 0.0.1.1
 
 DEFINES += APP_NAME=\\\"$${TARGET}\\\" \
            APP_VERSION=\\\"$${VERSION}\\\" \

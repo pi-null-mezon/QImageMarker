@@ -26,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
         _dir.mkpath(_dir.absolutePath());
     settings = new QSettings(_dir.absolutePath().append("/%1.ini").arg(APP_NAME),QSettings::IniFormat);
 
-    ui->actionEqualizeImage->setChecked(settings->value("EqualizeImage",true).toBool());
+    ui->actionEqualizeImage->setChecked(settings->value("EqualizeImage",false).toBool());
 
     connect(ui->widget,&QImageWidget::fileDropped,this,&MainWindow::openDirectory);
 }
@@ -228,7 +228,7 @@ void MainWindow::commit_points()
 {
     auto points = ui->widget->getPoints();
     if(listofimages.size() > 0) {
-        const QString json_filename = dir.absoluteFilePath(QString("%1.json").arg(listofimages.at(position).section('.',0,0)));
+        const QString json_filename = dir.absoluteFilePath(QString("%1.json").arg(listofimages.at(position).section('.',0,-1)));
         if(points.size() > 0) {
             pointsmap.insert(listofimages.at(position),points);
             // write JSON markup
