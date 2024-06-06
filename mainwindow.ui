@@ -114,6 +114,83 @@
     <string>Equalize image</string>
    </property>
   </action>
+  <action name="actionFlipImageVertically">
+   <property name="text">
+    <string>Flip vertically</string>
+   </property>
+   <property name="toolTip">
+    <string>Flip image vertically</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionFlipImageHorizontally">
+   <property name="text">
+    <string>Flip horizontally</string>
+   </property>
+   <property name="toolTip">
+    <string>Flip image horizontally</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionDeleteImage">
+   <property name="text">
+    <string>Delete image</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete image</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionRotateImage180">
+   <property name="text">
+    <string>Rotate 180</string>
+   </property>
+   <property name="toolTip">
+    <string>Rotate image 180 degrees</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionRotateImage90">
+   <property name="text">
+    <string>Rotate 90</string>
+   </property>
+   <property name="toolTip">
+    <string>Rotate image 90 degrees</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionRotateImageMinus90">
+   <property name="text">
+    <string>Rotate -90</string>
+   </property>
+   <property name="toolTip">
+    <string>Rotate image -90 degrees</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionAddPolygon">
+   <property name="text">
+    <string>Add polygon</string>
+   </property>
+   <property name="toolTip">
+    <string>Add polygon</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

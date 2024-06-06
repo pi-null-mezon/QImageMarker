@@ -18,12 +18,13 @@ class QImageWidget : public QWidget
     Q_OBJECT
 public:
     explicit QImageWidget(QWidget *parent = nullptr);
-    void    setImage(const QImage &value);
+    void setImage(const QImage &value);
     static QRectF makeInscribedRect(const QRectF &_bound,const QRectF &_source);
-    void    setPoints(const QVector<QPointF> &_points);
-    QVector<QPointF> getPoints() const;
-    QJsonObject getFourJsonPoints() const;
-    void    clearPoints();
+    void setPoints(const QVector<QVector<QPointF>> &_points);
+    QVector<QVector<QPointF>> getPoints() const;
+    QJsonObject getFourJsonPoints(int index) const;
+    void clearPoints();
+    void addPolygon();
 
 signals:
     void fileDropped(const QString &filename);
@@ -45,8 +46,8 @@ private:
 
     QImage image;
     QRectF inscribedrect;
-    QVector<QPointF> points;
-    int pointindex;
+    QVector<QVector<QPointF>> vpoints;
+    int polygonindex, pointindex;
     bool allowpointmove;
     qreal scale;
     QPoint translation;

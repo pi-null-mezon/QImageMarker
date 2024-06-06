@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QLabel>
 #include <QJsonDocument>
+#include <QJsonArray>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -40,8 +41,17 @@ MainWindow::~MainWindow()
 void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 {
     QMenu _menu(this);
-    //_menu.addAction(ui->actionCopyPointsToClipboard);
+    _menu.addAction(ui->actionAddPolygon);
+    _menu.addSeparator();
     _menu.addAction(ui->actionclearPoints);
+    _menu.addSeparator();
+    _menu.addAction(ui->actionFlipImageHorizontally);
+    _menu.addAction(ui->actionFlipImageVertically);
+    _menu.addAction(ui->actionRotateImage180);
+    _menu.addAction(ui->actionRotateImage90);
+    _menu.addAction(ui->actionRotateImageMinus90);
+    _menu.addSeparator();
+    _menu.addAction(ui->actionDeleteImage);
     _menu.exec(event->globalPos());
 }
 
@@ -178,6 +188,70 @@ void MainWindow::open_image_with_index(int pos)
     }
 }
 
+void MainWindow::flip_current_image_vertically()
+{
+    if(position < listofimages.size()) {
+        const QString filename = dir.absoluteFilePath(listofimages.at(position));
+        cv::Mat bgrmat = cv::imread(filename.toStdString(),cv::IMREAD_COLOR);
+        cv::flip(bgrmat,bgrmat,0);
+        cv::imwrite(filename.toStdString(),bgrmat);
+        open_image_with_index(position);
+    }
+}
+
+void MainWindow::flip_current_image_horizontally()
+{
+    if(position < listofimages.size()) {
+        const QString filename = dir.absoluteFilePath(listofimages.at(position));
+        cv::Mat bgrmat = cv::imread(filename.toStdString(),cv::IMREAD_COLOR);
+        cv::flip(bgrmat,bgrmat,1);
+        cv::imwrite(filename.toStdString(),bgrmat);
+        open_image_with_index(position);
+    }
+}
+
+void MainWindow::rotate_current_image_180()
+{
+    if(position < listofimages.size()) {
+        const QString filename = dir.absoluteFilePath(listofimages.at(position));
+        cv::Mat bgrmat = cv::imread(filename.toStdString(),cv::IMREAD_COLOR);
+        cv::rotate(bgrmat,bgrmat,cv::ROTATE_180);
+        cv::imwrite(filename.toStdString(),bgrmat);
+        open_image_with_index(position);
+    }
+}
+
+void MainWindow::rotate_current_image_clockwise_90()
+{
+    if(position < listofimages.size()) {
+        const QString filename = dir.absoluteFilePath(listofimages.at(position));
+        cv::Mat bgrmat = cv::imread(filename.toStdString(),cv::IMREAD_COLOR);
+        cv::rotate(bgrmat,bgrmat,cv::ROTATE_90_CLOCKWISE);
+        cv::imwrite(filename.toStdString(),bgrmat);
+        open_image_with_index(position);
+    }
+}
+
+void MainWindow::rotate_current_image_counterclockwise_90()
+{
+    if(position < listofimages.size()) {
+        const QString filename = dir.absoluteFilePath(listofimages.at(position));
+        cv::Mat bgrmat = cv::imread(filename.toStdString(),cv::IMREAD_COLOR);
+        cv::rotate(bgrmat,bgrmat,cv::ROTATE_90_COUNTERCLOCKWISE);
+        cv::imwrite(filename.toStdString(),bgrmat);
+        open_image_with_index(position);
+    }
+}
+
+void MainWindow::delete_current_image()
+{
+    if(position < listofimages.size()) {
+        const QString filename = dir.absoluteFilePath(listofimages.at(position));
+        QFile::remove(filename);
+        openDirectory(dir.absolutePath());
+    }
+}
+
 void MainWindow::save_markup()
 {
     if(dir.exists() && listofimages.size() > 0 && pointsmap.size() > 0) {
@@ -189,9 +263,12 @@ void MainWindow::save_markup()
             const QStringList keys = pointsmap.keys();
             for(int j = 0; j < keys.size(); ++j) {
                 ts << keys.at(j);
-                const QVector<QPointF> points = pointsmap.value(keys.at(j));
-                for(int i = 0; i < points.size(); ++i)
-                    ts << ',' << points[i].x() << ',' << points[i].y();
+                const QVector<QVector<QPointF>> polygons = pointsmap.value(keys.at(j));
+                for(int p = 0; p < polygons.size(); ++p) {
+                    for(int i = 0; i < polygons[p].size(); ++i)
+                        ts << ',' << polygons[p][i].x() << ',' << polygons[p][i].y();
+                    ts << '!';
+                }
                 if(j != (keys.size() - 1))
                     ts << "\n";
             }
@@ -208,14 +285,33 @@ void MainWindow::read_markup()
             QFile file(filename);
             if(file.open(QIODevice::ReadOnly)) {
                 while(!file.atEnd()) {
-                    QString line = file.readLine();
-                    QStringList parts = line.split(',');
-                    if(parts.size() > 0 ) {
+                    QString line = file.readLine().trimmed();
+                    const QString filename = line.section(',',0,0);
+                    if(line.contains('!')) {
+                        QStringList polygonlines = line.section(filename,1).split('!');
+                        QVector<QVector<QPointF>> polygons;
+                        for(int p = 0; p < polygonlines.size()-1; ++p) {
+                            QStringList parts = polygonlines[p].split(',');
+                            if(parts.size() > 0 ) {
+                                QVector<QPointF> points;
+                                points.reserve((parts.size() - 1)/2);
+                                for(int i = 0; i < (parts.size() - 1) / 2; ++i)
+                                    points.push_back(QPointF(parts.at(2*i+1).toFloat(),parts.at(2*i+2).toFloat()));
+                                polygons.push_back(std::move(points));
+                            }
+                            pointsmap.insert(filename,std::move(polygons));
+                        }
+                    } else {
+
+                        QStringList parts = line.section(filename,1).split(',');
                         QVector<QPointF> points;
-                        points.reserve((parts.size() - 1)/2);
-                        for(int i = 0; i < (parts.size() - 1) / 2; ++i)
-                            points.push_back(QPointF(parts.at(2*i+1).toFloat(),parts.at(2*i+2).toFloat()));
-                        pointsmap.insert(parts.at(0),points);
+                        if(parts.size() > 0 ) {
+                            points.reserve((parts.size() - 1)/2);
+                            for(int i = 0; i < (parts.size() - 1) / 2; ++i)
+                                points.push_back(QPointF(parts.at(2*i+1).toFloat(),parts.at(2*i+2).toFloat()));
+                        }
+                        QVector<QVector<QPointF>> polygons(1,std::move(points));
+                        pointsmap.insert(filename,polygons);
                     }
                 }
             } else
@@ -226,16 +322,16 @@ void MainWindow::read_markup()
 
 void MainWindow::commit_points()
 {
-    auto points = ui->widget->getPoints();
+    const QVector<QVector<QPointF>> vpoints = ui->widget->getPoints();
     if(listofimages.size() > 0) {
         const QString extension = listofimages.at(position).section('.',-1,-1);
         const QString json_filename = dir.absoluteFilePath(QString("%1json").arg(listofimages.at(position).section(extension,0,0)));
         //qDebug("%s %s", extension.toUtf8().constData(), json_filename.toUtf8().constData());
-        if(points.size() > 0) {
-            pointsmap.insert(listofimages.at(position),points);
+        if(vpoints.size() > 0) {
+            pointsmap.insert(listofimages.at(position),vpoints);
             // write JSON markup
+
             QJsonObject json;
-            auto points_json = ui->widget->getFourJsonPoints();
             if(QFile::exists(json_filename)) {
                 QFile file(json_filename);
                 file.open(QIODevice::ReadOnly);
@@ -244,9 +340,10 @@ void MainWindow::commit_points()
             }
             QFile file(json_filename);
             file.open(QIODevice::WriteOnly);
-            const auto & keys = points_json.keys();
-            for(const auto & key : keys)
-                json[key] = points_json[key];
+            QJsonArray polygons;
+            for(int p = 0; p < vpoints.size(); ++p)
+                polygons.push_back(ui->widget->getFourJsonPoints(p));
+            json["polygons"] = polygons;
             file.write(QJsonDocument(json).toJson(QJsonDocument::Indented));
             file.close();
         } else {
@@ -263,3 +360,45 @@ void MainWindow::on_actionEqualizeImage_triggered(bool checked)
     settings->setValue("EqualizeImage",checked);
     open_image_with_index(position);
 }
+
+void MainWindow::on_actionFlipImageVertically_triggered()
+{
+    flip_current_image_vertically();
+}
+
+
+void MainWindow::on_actionFlipImageHorizontally_triggered()
+{
+    flip_current_image_horizontally();
+}
+
+
+void MainWindow::on_actionDeleteImage_triggered()
+{
+    delete_current_image();
+}
+
+
+void MainWindow::on_actionRotateImage180_triggered()
+{
+    rotate_current_image_180();
+}
+
+
+void MainWindow::on_actionRotateImage90_triggered()
+{
+    rotate_current_image_clockwise_90();
+}
+
+
+void MainWindow::on_actionRotateImageMinus90_triggered()
+{
+    rotate_current_image_counterclockwise_90();
+}
+
+
+void MainWindow::on_actionAddPolygon_triggered()
+{
+    ui->widget->addPolygon();
+}
+
