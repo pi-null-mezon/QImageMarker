@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "QImageMarker"
-#define MyAppVersion "0.0.1.1"
+#define MyAppVersion "1.0.0.0"
 #define MyAppPublisher "pi-mezon.ru"
 #define MyAppExeName "QImageMarker.exe"
 #define MyAppURL "https://github.com/pi-null-mezon/QImageMarker.git"
@@ -109,7 +109,7 @@ Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 ; Add application to autostart
-Name: "{commonstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+;Name: "{commonstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
