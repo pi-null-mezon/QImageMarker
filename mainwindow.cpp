@@ -264,6 +264,7 @@ void MainWindow::save_markup()
         if(file.open(QIODevice::WriteOnly)) {
             QTextStream ts;
             ts.setDevice(&file);
+            ts.setCodec("UTF-8");
             const QStringList keys = pointsmap.keys();
             for(int j = 0; j < keys.size(); ++j) {
                 ts << keys.at(j);
@@ -290,8 +291,10 @@ void MainWindow::read_markup()
             if(file.open(QIODevice::ReadOnly)) {
                 QTextStream ts;
                 ts.setDevice(&file);
+                ts.setCodec("UTF-8");
                 QString line;
                 while(ts.readLineInto(&line)) {
+                    qDebug("%s", line.toUtf8().constData());
                     const QString filename = line.section(',',0,0);
                     if(line.contains('!')) {
                         QStringList polygonlines = line.section(filename,1).split('!');
