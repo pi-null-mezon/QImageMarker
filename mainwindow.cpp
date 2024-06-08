@@ -14,7 +14,6 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -163,7 +162,12 @@ void MainWindow::open_image_with_index(int pos)
     if(pos >= 0 && pos < listofimages.size()) {
         const QString filename = dir.absoluteFilePath(listofimages.at(pos));
 
-        cv::Mat bgrmat = cv::imread(filename.toStdString(),cv::IMREAD_COLOR);
+        // We will read image through buffer cause opencv's imread does not support Cyrillic
+        QFile imfile(filename);
+        imfile.open(QIODevice::ReadOnly);
+        QByteArray qbytearray = imfile.readAll();
+        std::vector<unsigned char> buffer(qbytearray.data(),qbytearray.data()+qbytearray.size());
+        cv::Mat bgrmat = cv::imdecode(buffer,cv::IMREAD_COLOR);
         if(!bgrmat.empty() && ui->actionEqualizeImage->isChecked()) {
             std::vector<cv::Mat> channels;
             cv::split(bgrmat,channels);
@@ -284,8 +288,10 @@ void MainWindow::read_markup()
         if(QFile::exists(filename)) {
             QFile file(filename);
             if(file.open(QIODevice::ReadOnly)) {
-                while(!file.atEnd()) {
-                    QString line = file.readLine().trimmed();
+                QTextStream ts;
+                ts.setDevice(&file);
+                QString line;
+                while(ts.readLineInto(&line)) {
                     const QString filename = line.section(',',0,0);
                     if(line.contains('!')) {
                         QStringList polygonlines = line.section(filename,1).split('!');
@@ -326,11 +332,9 @@ void MainWindow::commit_points()
     if(listofimages.size() > 0) {
         const QString extension = listofimages.at(position).section('.',-1,-1);
         const QString json_filename = dir.absoluteFilePath(QString("%1json").arg(listofimages.at(position).section(extension,0,0)));
-        //qDebug("%s %s", extension.toUtf8().constData(), json_filename.toUtf8().constData());
         if(vpoints.size() > 0) {
             pointsmap.insert(listofimages.at(position),vpoints);
             // write JSON markup
-
             QJsonObject json;
             if(QFile::exists(json_filename)) {
                 QFile file(json_filename);
