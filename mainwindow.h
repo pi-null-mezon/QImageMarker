@@ -27,8 +27,7 @@ protected:
     void keyPressEvent(QKeyEvent *event);
 
 private slots:
-    void on_actionopenImage_triggered();
-    void on_actionCopyPointsToClipboard_triggered();
+    //void on_actionCopyPointsToClipboard_triggered();
     void on_actionclearPoints_triggered();
     void on_actionShowAbout_triggered();
     void on_actionExit_triggered();

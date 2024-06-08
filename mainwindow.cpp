@@ -76,22 +76,13 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 }
 
 
-void MainWindow::on_actionopenImage_triggered()
-{
-    const QString _filename = QFileDialog::getOpenFileName(this,APP_NAME,settings->value("LastFile",QStandardPaths::writableLocation(QStandardPaths::DownloadLocation)).toString(),"Images (*.png *.jpeg *.jpg *.bmp)");
-    qDebug("filename: %s",_filename.toUtf8().constData());
-    QImage _image(_filename);
-    if(!_image.isNull()) {
-        ui->widget->setImage(_image);
-        settings->setValue("LastFile",_filename);
-    }
-}
-
+/*
 void MainWindow::on_actionCopyPointsToClipboard_triggered()
 {
-    /*QClipboard *clipboard = QApplication::clipboard();
-    clipboard->setText(ui->widget->getPoints());*/
+    QClipboard *clipboard = QApplication::clipboard();
+    clipboard->setText(ui->widget->getPoints());
 }
+*/
 
 void MainWindow::on_actionclearPoints_triggered()
 {
@@ -294,7 +285,6 @@ void MainWindow::read_markup()
                 ts.setCodec("UTF-8");
                 QString line;
                 while(ts.readLineInto(&line)) {
-                    qDebug("%s", line.toUtf8().constData());
                     const QString filename = line.section(',',0,0);
                     if(line.contains('!')) {
                         QStringList polygonlines = line.section(filename,1).split('!');
