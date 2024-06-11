@@ -1,6 +1,12 @@
 # QImageMarker
 
-As simple as possible Qt+Opencv app for manual images markup
+As simple as possible Qt+Opencv app for manual images markup.
+
+![QImageMarker](./Resources/adv.jpg)
+
+## Build
+
+TO DO...
 
 ## Installation
 
